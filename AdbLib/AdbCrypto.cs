@@ -151,12 +151,13 @@ namespace AdbLib
          * @throws NoSuchAlgorithmException If an RSA key factory cannot be found
          * @throws InvalidKeySpecException If a PKCS8 or X509 key spec cannot be found
          */
-        public AdbCrypto loadAdbKeyPair(FileInfo privateKey, FileInfo publicKey)
+        public static AdbCrypto loadAdbKeyPair(FileInfo privateKey, FileInfo publicKey)
         {
             AdbCrypto crypto = new AdbCrypto();
 
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-            
+            rsa.FromXmlString(File.ReadAllText(privateKey.FullName));
+            crypto.rsa = rsa;
 
             /*int privKeyLength = (int)privateKey.length();
             int pubKeyLength = (int)publicKey.length();
@@ -212,7 +213,7 @@ namespace AdbLib
              c.update(SIGNATURE_PADDING);
 
                  return c.doFinal(payload);*/
-            return rsa.Encrypt(payload, true);
+            return rsa.Encrypt(payload, false);
         }
 
         /**
@@ -255,8 +256,8 @@ namespace AdbLib
         public void saveAdbKeyPair(FileInfo privateKey, FileInfo publicKey)
         {
 
-            File.WriteAllText(privateKey.FullName, Convert.ToBase64String(rsa.ExportCspBlob(true)));
-            File.WriteAllText(publicKey.FullName, Convert.ToBase64String(rsa.ExportCspBlob(false)));
+            File.WriteAllText(privateKey.FullName, rsa.ToXmlString(true));
+            File.WriteAllText(publicKey.FullName, rsa.ToXmlString(false));
 
         }
     }

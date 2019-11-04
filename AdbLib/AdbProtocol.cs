@@ -73,7 +73,7 @@ namespace AdbLib
             message.command = cmd;
             message.arg0 = arg0;
             message.arg1 = arg1;
-            if (offset == 0 && count == payload.Length)
+            if ( count>0 && payload !=null)
             {
                 message.payload = new byte[count];
                 Array.Copy(payload, 0, message.payload, offset, count);

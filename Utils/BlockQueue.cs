@@ -10,33 +10,24 @@ namespace Utils
 
         public T Dequeue()
         {
-            try
+
+            lock (queue)
             {
-                Monitor.Enter(queue);
                 while (queue.Count <= 0)
                     Monitor.Wait(queue);
 
                 return queue.Dequeue();
-            }
-            finally
-            {
-                Monitor.Exit(queue);
             }
 
         }
 
         public void Enqueue(T obj)
         {
-            try
+            lock (queue)
             {
-                Monitor.Enter(queue);
                 queue.Enqueue(obj);
+                Monitor.Pulse(queue);
             }
-            finally
-            {
-                Monitor.Exit(queue);
-            }
-            Monitor.Pulse(queue);
         }
 
         public int Count

@@ -11,12 +11,12 @@ namespace AdbLib
 {
     public abstract class AdbSessionBase
     {
-        BlockQueue<byte[]> messageQueue;
+
 
         public bool IsClosed { get; internal set; }
 
         /** The AdbConnection object that the stream communicates over */
-        private AdbConnection adbConn;
+        protected AdbConnection adbConn;
 
         /** The local ID of the stream */
         private uint localId;
@@ -32,6 +32,8 @@ namespace AdbLib
 
         /** Indicates whether the connection is closed already */
         private bool isClosed;
+
+
 
         /**
          * Creates a new AdbStream object on the specified AdbConnection
@@ -112,8 +114,6 @@ namespace AdbLib
         /**
          * Reads a pending write payload from the other side.
          * @return Byte array containing the payload of the write
-         * @throws InterruptedException If we are unable to wait for data
-         * @throws IOException If the stream fails while waiting
          */
         public byte[] Read()
         {
@@ -125,9 +125,14 @@ namespace AdbLib
             }
 
             data = readQueue.Dequeue();
-
-
             return data;
+        }
+
+        public byte[] ReadIfExists()
+        {
+            if (readQueue.Count > 0)
+                return readQueue.Dequeue();
+            return null;
         }
 
         /**
@@ -152,7 +157,6 @@ namespace AdbLib
          */
         public void Write(byte[] payload)
         {
-
             Write(payload, true);
         }
 

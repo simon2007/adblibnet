@@ -49,7 +49,7 @@ namespace AdbLib
          * Specifies the maximum amount data that can be sent to the remote peer.
          * This is only valid after connect() returns successfully.
          */
-        private uint maxData;
+        private int maxData;
 
         /**
          * An initialized ADB crypto object that contains a key pair.
@@ -77,13 +77,6 @@ namespace AdbLib
 
             this.socket = socket;
             this.stream = new BinaryStream(socket.GetStream());
-
-
-
-
-            this.connectionThread = new Thread(Run);
-            this.connectionThread.IsBackground = true;
-            this.connectionThread.Start();
         }
 
         internal void Send(AdbMessage packet)
@@ -200,7 +193,7 @@ namespace AdbLib
                             lock (this)
                             {
                                 /* We need to store the max data size */
-                                maxData = msg.arg1;
+                                maxData = (int)msg.arg1;
 
                                 /* Mark us as connected and unwait anyone waiting on the connection */
                                 connected = true;
@@ -246,25 +239,28 @@ namespace AdbLib
          * @throws InterruptedException If a connection cannot be waited on.
          * @throws IOException if the connection fails
          */
-        public uint getMaxData()
+        public int MaxData
         {
-            if (!connectAttempted)
-                throw new IOException("connect() must be called first");
-
-
-            lock (this)
+            get
             {
-                /* Block if a connection is pending, but not yet complete */
-                if (!connected)
-                    Monitor.Wait(this);
+                if (!connectAttempted)
+                    throw new IOException("connect() must be called first");
 
-                if (!connected)
+
+                lock (this)
                 {
-                    throw new IOException("Connection failed");
-                }
-            }
+                    /* Block if a connection is pending, but not yet complete */
+                    if (!connected)
+                        Monitor.Wait(this);
 
-            return maxData;
+                    if (!connected)
+                    {
+                        throw new IOException("Connection failed");
+                    }
+                }
+
+                return maxData;
+            }
         }
 
         /**
@@ -279,12 +275,15 @@ namespace AdbLib
                 throw new IOException("Already connected");
 
             /* Write the CONNECT packet */
-            AdbProtocol.generateConnect().WriteTo(stream);
+            Send(AdbProtocol.generateConnect());
 
 
             /* Start the connection thread to respond to the peer */
             connectAttempted = true;
-            connectionThread.Start();
+
+            this.connectionThread = new Thread(Run);
+            this.connectionThread.IsBackground = true;
+            this.connectionThread.Start();
 
             /* Wait for the connection to go live */
             lock (this)
@@ -299,16 +298,24 @@ namespace AdbLib
             }
         }
 
+        public ShellSession openShell()
+        {
+            return open< ShellSession>("shell:");
+        }
+
+        public SyncSession OpenSync()
+        {
+            return open< SyncSession>("sync:") ;
+        }
+
         /**
          * Opens an AdbStream object corresponding to the specified destination.
          * This routine will block until the connection completes.
          * @param destination The destination to open on the target
          * @return AdbStream object corresponding to the specified destination
-         * @throws UnsupportedEncodingException If the destination cannot be encoded to UTF-8
-         * @throws IOException If the stream fails while sending the packet
-         * @throws InterruptedException If we are unable to wait for the connection to finish
          */
-        public AdbSessionBase open(String destination)
+        private T open<T>(String destination)
+            where T: AdbSessionBase
         {
             uint localId = ++lastLocalId;
 
@@ -328,12 +335,11 @@ namespace AdbLib
             }
 
             /* Add this stream to this list of half-open streams */
-            AdbSessionBase stream = new ShellSession(this, localId);
+            T stream = Activator.CreateInstance(typeof(T), this, localId) as T;
             openStreams.Add(localId, stream);
 
             /* Send the open */
-            AdbProtocol.generateOpen(localId, destination).WriteTo(this.stream);
-
+            Send(AdbProtocol.generateOpen(localId, destination));
 
 
             /* Wait for the connection thread to receive the OKAY */

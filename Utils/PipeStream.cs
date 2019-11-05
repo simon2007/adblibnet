@@ -10,7 +10,7 @@ namespace Utils
     {
         private readonly BlockQueue<byte[]> queue;
 
-        
+
         public PipeStream()
         {
             queue = new BlockQueue<byte[]>(64);
@@ -33,9 +33,14 @@ namespace Utils
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            return Read(buffer, offset, count, false);
+            return Read(buffer, offset, count, (readCount,c) =>readCount>0 );
         }
-        private int Read(byte[] buffer, int offset, int count, bool fill)
+        public int ReadWithNoBlock(byte[] buffer, int offset, int count)
+        {
+            return Read(buffer, offset, count, (readCount, c)=>false);
+        }
+
+        private int Read(byte[] buffer, int offset, int count,Func<int,int,bool> onNoBufferedAction)
         {
             lock (queue)
             {
@@ -50,7 +55,11 @@ namespace Utils
                 {
                     if (buf == null)
                     {
-                        if (readCount > 0  && !fill && queue.Count <= 0) break;
+                        if (queue.Count <= 0)
+                        {
+                            if (!onNoBufferedAction(readCount, count))
+                                break;
+                        }
                         buf = queue.Dequeue();
                     }
 
@@ -89,7 +98,7 @@ namespace Utils
 
         public int Fill(byte[] buffer, int offset, int count)
         {
-            return Read(buffer, offset, count, true);
+            return Read(buffer, offset, count, (readCount, c) => c>0);
         }
 
 

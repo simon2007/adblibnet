@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Utils
@@ -22,14 +23,22 @@ namespace Utils
         public T Dequeue()
         {
 
+            return Dequeue(Int32.MaxValue);
+        }
+
+        public T Dequeue(int millisecondsTimeout)
+        {
+
             lock (queue)
             {
                 while (queue.Count <= 0)
-                    Monitor.Wait(queue);
+                {
+                    if (!Monitor.Wait(queue, millisecondsTimeout))
+                        return null;
+                }
 
                 return queue.Dequeue();
             }
-
         }
 
         public void Enqueue(T obj)

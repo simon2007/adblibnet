@@ -66,14 +66,16 @@ namespace AdbLib
          * @return Byte array containing the message
          */
 
-        public static AdbMessage generateMessage(uint cmd, uint arg0, uint arg1, byte[] payload, int offset, int count)
+        public static AdbMessage GenerateMessage(uint cmd, uint arg0, uint arg1, byte[] payload, int offset, int count)
         {
 
-            AdbMessage message = new AdbMessage();
-            message.command = cmd;
-            message.arg0 = arg0;
-            message.arg1 = arg1;
-            if ( count>0 && payload !=null)
+            AdbMessage message = new AdbMessage()
+            {
+                command = cmd,
+                arg0 = arg0,
+                arg1 = arg1
+            };
+            if (count > 0 && payload != null)
             {
                 message.payload = new byte[count];
                 Array.Copy(payload, 0, message.payload, offset, count);
@@ -84,20 +86,20 @@ namespace AdbLib
             return message;
         }
 
-        public static AdbMessage generateMessage(uint cmd, uint arg0, uint arg1, byte[] payload)
+        public static AdbMessage GenerateMessage(uint cmd, uint arg0, uint arg1, byte[] payload)
         {
             if (payload != null)
-                return generateMessage(cmd, arg0, arg1, payload, 0, payload.Length);
-            return generateMessage(cmd, arg0, arg1, null, 0, 0);
+                return GenerateMessage(cmd, arg0, arg1, payload, 0, payload.Length);
+            return GenerateMessage(cmd, arg0, arg1, null, 0, 0);
         }
 
         /**
          * Generates a connect message with default parameters.
          * @return Byte array containing the message
          */
-        public static AdbMessage generateConnect()
+        public static AdbMessage GenerateConnect()
         {
-            return generateMessage(CMD_CNXN, CONNECT_VERSION, CONNECT_MAXDATA, CONNECT_PAYLOAD);
+            return GenerateMessage(CMD_CNXN, CONNECT_VERSION, CONNECT_MAXDATA, CONNECT_PAYLOAD);
         }
 
         /**
@@ -106,9 +108,9 @@ namespace AdbLib
          * @param data The payload for the message
          * @return Byte array containing the message
          */
-        public static AdbMessage generateAuth(uint type, byte[] data)
+        public static AdbMessage GenerateAuth(uint type, byte[] data)
         {
-            return generateMessage(CMD_AUTH, type, 0, data);
+            return GenerateMessage(CMD_AUTH, type, 0, data);
         }
 
         /**
@@ -116,16 +118,15 @@ namespace AdbLib
          * @param localId A unique local ID identifying the stream
          * @param dest The destination of the stream on the target
          * @return Byte array containing the message
-         * @throws UnsupportedEncodingException If the destination cannot be encoded to UTF-8
          */
-        public static AdbMessage generateOpen(uint localId, String dest)
+        public static AdbMessage GenerateOpen(uint localId, String dest)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(dest);
             byte[] buf = new byte[buffer.Length + 1];
             Array.Copy(buffer, buf, buffer.Length);
 
 
-            return generateMessage(CMD_OPEN, localId, 0, buf);
+            return GenerateMessage(CMD_OPEN, localId, 0, buf);
         }
 
         /**
@@ -135,14 +136,14 @@ namespace AdbLib
          * @param data The data to provide as the write payload
          * @return Byte array containing the message
          */
-        public static AdbMessage generateWrite(uint localId, uint remoteId, byte[] data)
+        public static AdbMessage GenerateWrite(uint localId, uint remoteId, byte[] data)
         {
-            return generateMessage(CMD_WRTE, localId, remoteId, data);
+            return GenerateMessage(CMD_WRTE, localId, remoteId, data);
         }
 
-        public static AdbMessage generateWrite(uint localId, uint remoteId, byte[] data, int offset, int count)
+        public static AdbMessage GenerateWrite(uint localId, uint remoteId, byte[] data, int offset, int count)
         {
-            return generateMessage(CMD_WRTE, localId, remoteId, data, offset, count);
+            return GenerateMessage(CMD_WRTE, localId, remoteId, data, offset, count);
         }
 
 
@@ -152,9 +153,9 @@ namespace AdbLib
          * @param remoteId The unique remote ID of the stream
          * @return Byte array containing the message
          */
-        public static AdbMessage generateClose(uint localId, uint remoteId)
+        public static AdbMessage GenerateClose(uint localId, uint remoteId)
         {
-            return generateMessage(CMD_CLSE, localId, remoteId, null);
+            return GenerateMessage(CMD_CLSE, localId, remoteId, null);
         }
 
         /**
@@ -163,9 +164,9 @@ namespace AdbLib
          * @param remoteId The unique remote ID of the stream
          * @return Byte array containing the message
          */
-        public static AdbMessage generateReady(uint localId, uint remoteId)
+        public static AdbMessage GenerateReady(uint localId, uint remoteId)
         {
-            return generateMessage(CMD_OKAY, localId, remoteId, null);
+            return GenerateMessage(CMD_OKAY, localId, remoteId, null);
         }
 
     }

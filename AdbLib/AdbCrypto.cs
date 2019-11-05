@@ -70,7 +70,7 @@ namespace AdbLib
          * @param pubkey RSAPublicKey object to convert
          * @return Byte array containing the converted RSAPublicKey object
          */
-        private byte[] convertRsaPublicKeyToAdbFormat(String pubkey)
+        private byte[] ConvertRsaPublicKeyToAdbFormat(String pubkey)
         {
             /*
                      * ADB literally just saves the RSAPublicKey struct to a file.
@@ -138,7 +138,6 @@ namespace AdbLib
 
             bbuf.putInt(pubkey.getPublicExponent().intValue());
             return bbuf.array();*/
-            return null;
         }
 
         /**
@@ -147,11 +146,8 @@ namespace AdbLib
          * @param privateKey File containing the RSA private key
          * @param publicKey File containing the RSA public key
          * @return New AdbCrypto object
-         * @throws IOException If the files cannot be read
-         * @throws NoSuchAlgorithmException If an RSA key factory cannot be found
-         * @throws InvalidKeySpecException If a PKCS8 or X509 key spec cannot be found
          */
-        public static AdbCrypto loadAdbKeyPair(FileInfo privateKey, FileInfo publicKey)
+        public static AdbCrypto LoadAdbKeyPair(FileInfo privateKey, FileInfo publicKey)
         {
             AdbCrypto crypto = new AdbCrypto();
 
@@ -189,12 +185,13 @@ namespace AdbLib
          * Creates a new AdbCrypto object by generating a new key pair.
          * @param base64 Implementation of base 64 conversion interface required by ADB 
          * @return A new AdbCrypto object
-         * @throws NoSuchAlgorithmException If an RSA key factory cannot be found
          */
-        public static AdbCrypto generateAdbKeyPair()
+        public static AdbCrypto GenerateAdbKeyPair()
         {
-            AdbCrypto crypto = new AdbCrypto();
-            crypto.rsa= new RSACryptoServiceProvider(KEY_LENGTH_BITS);
+            AdbCrypto crypto = new AdbCrypto
+            {
+                rsa = new RSACryptoServiceProvider(KEY_LENGTH_BITS)
+            };
             return crypto;
         }
 
@@ -202,9 +199,8 @@ namespace AdbLib
          * Signs the ADB SHA1 payload with the private key of this object.
          * @param payload SHA1 payload to sign
          * @return Signed SHA1 payload
-         * @throws GeneralSecurityException If signing fails
          */
-        public byte[] signAdbTokenPayload(byte[] payload)
+        public byte[] SignAdbTokenPayload(byte[] payload)
         {
             /* Cipher c = Cipher.getInstance("RSA/ECB/NoPadding");
 
@@ -219,9 +215,8 @@ namespace AdbLib
         /**
          * Gets the RSA public key in ADB format.
          * @return Byte array containing the RSA public key in ADB format.
-         * @throws IOException If the key cannot be retrived
          */
-        public byte[] getAdbPublicKeyPayload()
+        public byte[] GetAdbPublicKeyPayload()
         {
             /*byte[]
         convertedKey = convertRsaPublicKeyToAdbFormat((RSAPublicKey)keyPair.getPublic());
@@ -234,7 +229,7 @@ namespace AdbLib
 
             return keyString.toString().getBytes("UTF-8");*/
 
-            byte[]        convertedKey = convertRsaPublicKeyToAdbFormat(Convert.ToBase64String(rsa.ExportCspBlob(false)));
+            byte[]        convertedKey = ConvertRsaPublicKeyToAdbFormat(Convert.ToBase64String(rsa.ExportCspBlob(false)));
 
             StringBuilder keyString = new StringBuilder(720);
             //RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
@@ -251,9 +246,8 @@ namespace AdbLib
          * Saves the AdbCrypto's key pair to the specified files.
          * @param privateKey The file to store the encoded private key
          * @param publicKey The file to store the encoded public key
-         * @throws IOException If the files cannot be written
          */
-        public void saveAdbKeyPair(FileInfo privateKey, FileInfo publicKey)
+        public void SaveAdbKeyPair(FileInfo privateKey, FileInfo publicKey)
         {
 
             File.WriteAllText(privateKey.FullName, rsa.ToXmlString(true));

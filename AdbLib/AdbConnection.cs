@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using utils;
 
 namespace AdbLib
 {
-    public class AdbConnection
+    public class AdbConnection : IDisposable
     {
         /** The underlying socket that this class uses to
  * communicate with the target device.
@@ -84,13 +82,36 @@ namespace AdbLib
             packet.WriteTo(stream);
         }
 
+        public static AdbConnection Create(String host, int port)
+        {
+            FileInfo privateKeyFile = new FileInfo("private.key");
+            FileInfo publicKeyFile = new FileInfo("public.key");
+            AdbCrypto adbCryto;
+            if (privateKeyFile.Exists)
+            {
+                adbCryto = AdbCrypto.LoadAdbKeyPair(privateKeyFile, publicKeyFile);
+            }
+            else
+            {
+                adbCryto = AdbCrypto.GenerateAdbKeyPair();
+                adbCryto.SaveAdbKeyPair(privateKeyFile, publicKeyFile);
+            }
+            return Create(host, port, adbCryto);
+        }
+
+        public static AdbConnection Create(String host, int port, AdbCrypto crypto)
+        {
+            TcpClient client = new TcpClient();
+            client.Connect(host, port);
+            return Create(client, crypto);
+        }
+
         /**
          * Creates a AdbConnection object associated with the socket and
          * crypto object specified.
          * @param socket The socket that the connection will use for communcation.
          * @param crypto The crypto object that stores the key pair for authentication.
          * @return A new AdbConnection object.
-         * @throws IOException If there is a socket error
          */
         public static AdbConnection Create(TcpClient socket, AdbCrypto crypto)
         {
@@ -173,14 +194,14 @@ namespace AdbLib
                                 if (sentSignature)
                                 {
                                     /* We've already tried our signature, so send our public key */
-                                    packet = AdbProtocol.generateAuth(AdbProtocol.AUTH_TYPE_RSA_PUBLIC,
-                                            crypto.getAdbPublicKeyPayload());
+                                    packet = AdbProtocol.GenerateAuth(AdbProtocol.AUTH_TYPE_RSA_PUBLIC,
+                                            crypto.GetAdbPublicKeyPayload());
                                 }
                                 else
                                 {
                                     /* We'll sign the token */
-                                    packet = AdbProtocol.generateAuth(AdbProtocol.AUTH_TYPE_SIGNATURE,
-                                            crypto.signAdbTokenPayload(msg.payload));
+                                    packet = AdbProtocol.GenerateAuth(AdbProtocol.AUTH_TYPE_SIGNATURE,
+                                            crypto.SignAdbTokenPayload(msg.payload));
                                     sentSignature = true;
                                 }
 
@@ -207,10 +228,15 @@ namespace AdbLib
                             break;
                     }
                 }
-                catch (Exception)
+                catch (ThreadAbortException)
                 {
                     /* The cleanup is taken care of by a combination of this thread
-                     * and close() */
+                    * and close() */
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
                     break;
                 }
             }
@@ -218,7 +244,7 @@ namespace AdbLib
             /* This thread takes care of cleaning up pending streams */
             lock (this)
             {
-                cleanupStreams();
+                CleanupStreams();
                 Monitor.PulseAll(this);
                 connectAttempted = false;
             }
@@ -235,8 +261,6 @@ namespace AdbLib
          * A connection must have been attempted before calling this routine.
          * This routine will block if a connection is in progress.
          * @return The maximum data size indicated in the connect packet.
-         * @throws InterruptedException If a connection cannot be waited on.
-         * @throws IOException if the connection fails
          */
         public int MaxData
         {
@@ -265,23 +289,22 @@ namespace AdbLib
         /**
          * Connects to the remote device. This routine will block until the connection
          * completes.
-         * @throws IOException If the socket fails while connecting
-         * @throws InterruptedException If we are unable to wait for the connection to finish
          */
-        public void connect()
+        public void Connect()
         {
             if (connected)
                 throw new IOException("Already connected");
 
             /* Write the CONNECT packet */
-            Send(AdbProtocol.generateConnect());
+            Send(AdbProtocol.GenerateConnect());
 
 
             /* Start the connection thread to respond to the peer */
             connectAttempted = true;
 
-            this.connectionThread = new Thread(Run);
-            this.connectionThread.IsBackground = true;
+            this.connectionThread = new Thread(Run) {
+                IsBackground = true
+        };
             this.connectionThread.Start();
 
             /* Wait for the connection to go live */
@@ -297,19 +320,19 @@ namespace AdbLib
             }
         }
 
-        public ShellSession openShell()
+        public ShellSession OpenShell()
         {
-            return open< ShellSession>("shell:");
+            return Open<ShellSession>("shell:");
         }
 
         public SyncSession OpenSync()
         {
-            return open< SyncSession>("sync:") ;
+            return Open<SyncSession>("sync:");
         }
 
         public void Reboot()
         {
-            Send(AdbProtocol.generateOpen(++lastLocalId, "reboot:"));
+            Send(AdbProtocol.GenerateOpen(++lastLocalId, "reboot:"));
             Close();
         }
 
@@ -320,8 +343,8 @@ namespace AdbLib
          * @param destination The destination to open on the target
          * @return AdbStream object corresponding to the specified destination
          */
-        private T open<T>(String destination)
-            where T: AdbSessionBase
+        private T Open<T>(String destination)
+            where T : AdbSessionBase
         {
             uint localId = ++lastLocalId;
 
@@ -345,7 +368,7 @@ namespace AdbLib
             openStreams.Add(localId, stream);
 
             /* Send the open */
-            Send(AdbProtocol.generateOpen(localId, destination));
+            Send(AdbProtocol.GenerateOpen(localId, destination));
 
 
             /* Wait for the connection thread to receive the OKAY */
@@ -365,7 +388,7 @@ namespace AdbLib
         /**
          * This function terminates all I/O on streams associated with this ADB connection
          */
-        private void cleanupStreams()
+        private void CleanupStreams()
         {
             /* Close all streams on this connection */
             foreach (AdbSessionBase s in openStreams.Values)
@@ -376,7 +399,7 @@ namespace AdbLib
                 {
                     s.Close();
                 }
-                catch (IOException e) { }
+                catch{ }
             }
 
             /* No open streams anymore */
@@ -384,7 +407,6 @@ namespace AdbLib
         }
 
         /** This routine closes the Adb connection and underlying socket
-         * @throws IOException if the socket fails to close
          */
 
         public void Close()
@@ -400,7 +422,13 @@ namespace AdbLib
             connectionThread.Interrupt();
 
             connectionThread.Join();
+            connectionThread = null;
 
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

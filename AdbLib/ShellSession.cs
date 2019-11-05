@@ -13,10 +13,12 @@ namespace AdbLib
 
 
         public ShellSession(AdbConnection adbConnection, uint localId)
-            :base(adbConnection,localId)
+            : base(adbConnection, localId)
         {
-            Thread thread = new Thread(Run);
-            thread.IsBackground = true;
+            Thread thread = new Thread(Run)
+            {
+                IsBackground = true
+            };
             thread.Start();
         }
 

@@ -9,44 +9,39 @@ namespace AdbListTest
     [TestClass]
     public class AdbSyncUnitTest
     {
-        AdbConnection connect;
-        [ClassInitialize]
-        public void Init()
+
+        public AdbConnection CreateAdbConnection()
         {
-            TcpClient tc = new TcpClient();
-            tc.Connect("192.168.1.126", 5555);
-            FileInfo privateKeyFile = new FileInfo("private.key");
-            FileInfo publicKeyFile = new FileInfo("public.key");
-            AdbCrypto adbCryto;
-            if (privateKeyFile.Exists)
-            {
-                adbCryto = AdbCrypto.loadAdbKeyPair(privateKeyFile, publicKeyFile);
-            }
-            else
-            {
-                adbCryto = AdbCrypto.generateAdbKeyPair();
-                adbCryto.saveAdbKeyPair(privateKeyFile, publicKeyFile);
-            }
-            connect = AdbConnection.Create(tc, adbCryto);
-            connect.connect();
+           
+            AdbConnection connect = AdbConnection.Create("192.168.1.178", 5555);
+            connect.Connect();
+            return connect;
         }
 
 
         [TestMethod]
-        private void PushTest()
+        public void PushTest()
         {
-            SyncSession syncSession = connect.OpenSync();
-            File.WriteAllText("test.log", "aaaa");
-            syncSession.Push("/data/test.log", new FileInfo("test.log"));
-            syncSession.Close();
+            using (AdbConnection connect = CreateAdbConnection())
+            {
+                SyncSession syncSession = connect.OpenSync();
+                File.WriteAllText("test.log", "aaaa");
+                syncSession.Push("/data/test.log", new FileInfo("test.log"));
+                syncSession.Close();
+
+                connect.Close();
+            }
         }
 
         [TestMethod]
-        private void PullTest()
+        public void PullTest()
         {
+            AdbConnection connect = CreateAdbConnection();
             SyncSession syncSession = connect.OpenSync();
             syncSession.Pull("/data/test.log", new FileInfo("test.log"));
             syncSession.Close();
+
+            connect.Close();
         }
     }
 }

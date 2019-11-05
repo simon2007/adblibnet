@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AdbLib
 {
@@ -30,14 +27,14 @@ namespace AdbLib
             {
                 Encoding.ASCII.GetBytes(cmd, 0, cmd.Length, buffer, 0);
             }
-            byte[] htoll(long x)
+            byte[] Htoll(long x)
             {
                 byte[] buffer = new byte[4];
-                htoll(x, buffer, 0);
+                Htoll(x, buffer, 0);
                 return buffer;
             }
 
-            void htoll(long x, byte[] buffer, int offset)
+            void Htoll(long x, byte[] buffer, int offset)
             {
                 buffer[offset + 3] = (byte)(((x) & 0xFF000000) >> 24);
                 buffer[offset + 2] = (byte)(((x) & 0x00FF0000) >> 16);
@@ -46,7 +43,7 @@ namespace AdbLib
 
             }
 
-            int ltohl(byte[] buffer, int offset)
+            int Ltohl(byte[] buffer, int offset)
             {
                 int ret = (((buffer[offset + 3]) ) << 24)
                         | (((buffer[offset + 2]) ) << 16)
@@ -58,12 +55,12 @@ namespace AdbLib
 
             private int GetLength(byte[] buffer)
             { 
-                return ltohl(buffer, 4);                 
+                return Ltohl(buffer, 4);                 
             }
 
             private void  SetLength(byte[] buffer,int length)
             {
-                htoll(length, buffer, 4);
+                Htoll(length, buffer, 4);
             }
 
 #endregion
@@ -90,7 +87,7 @@ namespace AdbLib
         const int S_IXOTH = (S_IXGRP >> 3);    /* Execute by others.  */
 
 
-        private void quit()
+        private void Quit()
         {
             byte[] command = new byte[8];
             Encoding.ASCII.GetBytes(CMD_QUIT, 0, CMD_QUIT.Length, command, 0);
@@ -175,7 +172,7 @@ namespace AdbLib
             catch (IOException)
             {
                 if (!IsClosed)
-                    quit();
+                    Quit();
                 throw;
             }
         }

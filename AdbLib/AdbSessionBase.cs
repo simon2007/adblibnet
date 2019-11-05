@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Utils;
 
 namespace AdbLib
@@ -61,12 +58,11 @@ namespace AdbLib
         /**
          * Called by the connection thread to send an OKAY packet, allowing the
          * other side to continue transmission.
-         * @throws IOException If the connection fails while sending the packet
          */
         internal void SendReady()
         {
             /* Generate and send a READY packet */
-            AdbMessage packet = AdbProtocol.generateReady(localId, remoteId);
+            AdbMessage packet = AdbProtocol.GenerateReady(localId, remoteId);
             adbConn.Send(packet);
         }
 
@@ -107,6 +103,7 @@ namespace AdbLib
             }
         }
 
+        #region Read and Write
         /**
          * Reads a pending write payload from the other side.
          * @return Byte array containing the payload of the write
@@ -118,7 +115,7 @@ namespace AdbLib
 
 
 
-        protected int Read(byte[] buffer,int offset,int count)
+        protected int Read(byte[] buffer, int offset, int count)
         {
             return readStream.Read(buffer, offset, count);
         }
@@ -137,8 +134,6 @@ namespace AdbLib
         /**
          * Sends a write packet with a given String payload.
          * @param payload Payload in the form of a String
-         * @throws IOException If the stream fails while sending data
-         * @throws InterruptedException If we are unable to wait to send data
          */
         protected void Write(String payload)
         {
@@ -151,8 +146,6 @@ namespace AdbLib
         /**
          * Sends a write packet with a given byte array payload.
          * @param payload Payload in the form of a byte array
-         * @throws IOException If the stream fails while sending data
-         * @throws InterruptedException If we are unable to wait to send data
          */
         protected void Write(byte[] payload)
         {
@@ -183,7 +176,7 @@ namespace AdbLib
             }
 
             /* Generate a WRITE packet and send it */
-            AdbMessage packet = AdbProtocol.generateWrite(localId, remoteId, payload, offset, count);
+            AdbMessage packet = AdbProtocol.GenerateWrite(localId, remoteId, payload, offset, count);
             adbConn.Send(packet);
 
             if (flush)
@@ -194,18 +187,15 @@ namespace AdbLib
          * Queues a write packet and optionally sends it immediately.
          * @param payload Payload in the form of a byte array
          * @param flush Specifies whether to send the packet immediately
-         * @throws IOException If the stream fails while sending data
-         * @throws InterruptedException If we are unable to wait to send data
          */
         protected void Write(byte[] payload, bool flush)
         {
 
             Write(payload, 0, payload.Length, false);
         }
-
+        #endregion
         /**
          * Closes the stream. This sends a close message to the peer.
-         * @throws IOException If the stream fails while sending the close message.
          */
 
         public void Close()
@@ -220,7 +210,7 @@ namespace AdbLib
                 NotifyClose();
             }
 
-            AdbMessage packet = AdbProtocol.generateClose(localId, remoteId);
+            AdbMessage packet = AdbProtocol.GenerateClose(localId, remoteId);
             adbConn.Send(packet);
             adbConn.Flush();
         }

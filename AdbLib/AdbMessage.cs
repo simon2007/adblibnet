@@ -12,7 +12,6 @@ namespace AdbLib
 
     /**
      * This class provides an abstraction for the ADB message format.
-     * @author Cameron Gutman
      */
     class AdbMessage
     {
@@ -30,7 +29,6 @@ namespace AdbLib
          * This message is NOT validated.
          * @param in InputStream object to read data from
          * @return An AdbMessage object represented the message read
-         * @throws IOException If the stream fails while reading
          */
         public static AdbMessage ReadAdbMessage(BinaryStream inStream) 
         {
@@ -54,7 +52,7 @@ namespace AdbLib
 				msg.payload = new byte[payloadLength];
                 inStream.Fill(msg.payload);
 
-                if (getPayloadChecksum(msg.payload) != checksum)
+                if (GetPayloadChecksum(msg.payload) != checksum)
                     throw new IOException("checksum error");
             }
 			
@@ -80,7 +78,7 @@ namespace AdbLib
             if (payload != null)
             {
                 inStream.Write(payload.Length);
-                inStream.Write(getPayloadChecksum(payload));
+                inStream.Write(GetPayloadChecksum(payload));
             }
             else
             {
@@ -101,12 +99,12 @@ namespace AdbLib
          * @param payload Payload to checksum
          * @return The checksum of the payload
          */
-        private static uint getPayloadChecksum(byte[] payload)
+        private static uint GetPayloadChecksum(byte[] payload)
         {
-            return getPayloadChecksum(payload, 0, payload.Length);
+            return GetPayloadChecksum(payload, 0, payload.Length);
         }
 
-        private static uint getPayloadChecksum(byte[] payload, int offset, int count)
+        private static uint GetPayloadChecksum(byte[] payload, int offset, int count)
         {
             uint checksum = 0;
             int end = offset + count;

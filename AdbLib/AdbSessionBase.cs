@@ -11,8 +11,6 @@ namespace AdbLib
 {
     public abstract class AdbSessionBase
     {
-
-
         public bool IsClosed { get; internal set; }
 
         /** The AdbConnection object that the stream communicates over */
@@ -101,12 +99,10 @@ namespace AdbLib
             /* Unwait readers and writers */
             lock (this)
             {
-                //notifyAll();
                 Monitor.PulseAll(this);
             }
             lock (readStream)
             {
-                //readQueue.notifyAll();
                 Monitor.PulseAll(readStream);
             }
         }
@@ -226,7 +222,7 @@ namespace AdbLib
 
             AdbMessage packet = AdbProtocol.generateClose(localId, remoteId);
             adbConn.Send(packet);
-            //adbConn.outputStream.flush();
+            adbConn.Flush();
         }
 
     }

@@ -207,7 +207,7 @@ namespace AdbLib
                             break;
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     /* The cleanup is taken care of by a combination of this thread
                      * and close() */
@@ -219,7 +219,6 @@ namespace AdbLib
             lock (this)
             {
                 cleanupStreams();
-                //conn.notifyAll();
                 Monitor.PulseAll(this);
                 connectAttempted = false;
             }
@@ -308,6 +307,13 @@ namespace AdbLib
             return open< SyncSession>("sync:") ;
         }
 
+        public void Reboot()
+        {
+            Send(AdbProtocol.generateOpen(++lastLocalId, "reboot:"));
+            Close();
+        }
+
+
         /**
          * Opens an AdbStream object corresponding to the specified destination.
          * This routine will block until the connection completes.
@@ -381,7 +387,7 @@ namespace AdbLib
          * @throws IOException if the socket fails to close
          */
 
-        public void close()
+        public void Close()
         {
             /* If the connection thread hasn't spawned yet, there's nothing to do */
             if (connectionThread == null)

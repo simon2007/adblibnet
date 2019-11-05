@@ -24,9 +24,10 @@ namespace AdbLib
 
         private void Run()
         {
-            while(!IsClosed)
+            byte[] payload = new byte[1024];
+            while (!IsClosed)
             {
-                byte[] payload = Read();
+                Read(payload);
                 Debug.WriteLine(Encoding.UTF8.GetString(payload));
             }
         }

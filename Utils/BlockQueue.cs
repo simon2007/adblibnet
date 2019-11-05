@@ -6,7 +6,18 @@ namespace Utils
     public class BlockQueue<T>
         where T:class
     {
-        private Queue<T> queue = new Queue<T>();
+        private readonly Queue<T> queue;
+
+        public BlockQueue(int capacity)
+        {
+            queue = new Queue<T>(capacity);
+        }
+
+        public BlockQueue()
+        {
+            queue = new Queue<T>();
+        }
+
 
         public T Dequeue()
         {

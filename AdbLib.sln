@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdbLib", "AdbLib\AdbLib.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils", "Utils\Utils.csproj", "{FA956B76-4FA7-400D-93DA-F76DECBD3C24}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdbUnitTest", "AdbUnitTest\AdbUnitTest.csproj", "{7D93F44E-BDDF-4E97-810C-5A8C6E820737}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{FA956B76-4FA7-400D-93DA-F76DECBD3C24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA956B76-4FA7-400D-93DA-F76DECBD3C24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA956B76-4FA7-400D-93DA-F76DECBD3C24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D93F44E-BDDF-4E97-810C-5A8C6E820737}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D93F44E-BDDF-4E97-810C-5A8C6E820737}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D93F44E-BDDF-4E97-810C-5A8C6E820737}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D93F44E-BDDF-4E97-810C-5A8C6E820737}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

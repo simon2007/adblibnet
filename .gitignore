@@ -3,10 +3,11 @@
 ################################################################################
 
 /.vs
-/AdbLib/bin/Debug
+/AdbLib/bin
 /AdbLib/obj
-/AdbLibTest/bin/Debug
+/AdbLibTest/bin
 /AdbLibTest/obj
-/Utils/bin/Debug
+/Utils/bin
 /Utils/obj
-/Utils/obj
+/AdbUnitTest/obj
+/AdbUnitTest/bin

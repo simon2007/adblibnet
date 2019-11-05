@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="BinaryStream.cs" />
     <Compile Include="BlockQueue.cs" />
+    <Compile Include="PipeStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

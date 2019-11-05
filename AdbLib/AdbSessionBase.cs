@@ -28,7 +28,7 @@ namespace AdbLib
         private Boolean writeReady;
 
         /** A queue of data from the target's write packets */
-        private BlockQueue<byte[]> readQueue;
+        private PipeStream readStream;
 
         /** Indicates whether the connection is closed already */
         private bool isClosed;
@@ -45,7 +45,7 @@ namespace AdbLib
         {
             this.adbConn = adbConn;
             this.localId = localId;
-            this.readQueue = new BlockQueue<byte[]>();
+            this.readStream = new PipeStream();
             this.writeReady = false;
             this.isClosed = false;
         }
@@ -56,7 +56,7 @@ namespace AdbLib
          */
         internal void AddPayload(byte[] payload)
         {
-            readQueue.Enqueue(payload);
+            readStream.Write(payload);
 
         }
 
@@ -104,10 +104,10 @@ namespace AdbLib
                 //notifyAll();
                 Monitor.PulseAll(this);
             }
-            lock (readQueue)
+            lock (readStream)
             {
                 //readQueue.notifyAll();
-                Monitor.PulseAll(readQueue);
+                Monitor.PulseAll(readStream);
             }
         }
 
@@ -115,25 +115,28 @@ namespace AdbLib
          * Reads a pending write payload from the other side.
          * @return Byte array containing the payload of the write
          */
-        public byte[] Read()
+        protected int Read(byte[] buffer)
         {
-            byte[] data = null;
-
-            if (isClosed)
-            {
-                throw new IOException("Stream closed");
-            }
-
-            data = readQueue.Dequeue();
-            return data;
+            return Read(buffer, 0, buffer.Length);
         }
 
-        public byte[] ReadIfExists()
+
+
+        protected int Read(byte[] buffer,int offset,int count)
         {
-            if (readQueue.Count > 0)
-                return readQueue.Dequeue();
-            return null;
+            return readStream.Read(buffer, offset, count);
         }
+
+        protected int Fill(byte[] buffer)
+        {
+            return Fill(buffer, 0, buffer.Length);
+        }
+
+        protected int Fill(byte[] buffer, int offset, int count)
+        {
+            return readStream.Fill(buffer, offset, count);
+        }
+
 
         /**
          * Sends a write packet with a given String payload.
@@ -141,7 +144,7 @@ namespace AdbLib
          * @throws IOException If the stream fails while sending data
          * @throws InterruptedException If we are unable to wait to send data
          */
-        public void Write(String payload)
+        protected void Write(String payload)
         {
             /* ADB needs null-terminated strings */
             Write(Encoding.UTF8.GetBytes(payload), false);
@@ -155,18 +158,18 @@ namespace AdbLib
          * @throws IOException If the stream fails while sending data
          * @throws InterruptedException If we are unable to wait to send data
          */
-        public void Write(byte[] payload)
+        protected void Write(byte[] payload)
         {
             Write(payload, true);
         }
 
-        public void Write(byte[] payload, int offset, int count)
+        protected void Write(byte[] payload, int offset, int count)
         {
 
             Write(payload, offset, count, true);
         }
 
-        public void Write(byte[] payload, int offset, int count, bool flush)
+        protected void Write(byte[] payload, int offset, int count, bool flush)
         {
 
             lock (this)
@@ -198,7 +201,7 @@ namespace AdbLib
          * @throws IOException If the stream fails while sending data
          * @throws InterruptedException If we are unable to wait to send data
          */
-        public void Write(byte[] payload, bool flush)
+        protected void Write(byte[] payload, bool flush)
         {
 
             Write(payload, 0, payload.Length, false);
